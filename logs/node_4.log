@@ -1,0 +1,14 @@
+[2020-05-06 20:16:59 | 4 ] Listening on 172.20.10.3:5004
+[ADMIN INTERFACE] Choose option: Ping Node(1), Election(2), Disconnect(3)
+[2020-05-06 20:17:21 | 4 ] 172.20.10.3:62152 connected.
+[2020-05-06 20:17:21 | 4 ] Receive from 1: PING 4
+[2020-05-06 20:17:21 | 4 ] Send to 1: PING_RESPONSE 4
+[2020-05-06 20:17:24 | 4 ] 172.20.10.3:62154 connected.
+[2020-05-06 20:17:24 | 4 ] Receive from 3: ELECTION 
+[2020-05-06 20:17:24 | 4 ] Send to 3: OK 
+[2020-05-06 20:17:24 | 4 ] Send to 5: ELECTION
+[2020-05-06 20:17:24 | 4 ] Receive from 5: OK 5
+[2020-05-06 20:17:34 | 4 ] 172.20.10.3:62163 connected.
+[2020-05-06 20:17:34 | 4 ] Receive from 5: COORDINATOR 5
+[2020-05-06 20:17:34 | 4 ] 172.20.10.3:62164 connected.
+[2020-05-06 20:17:34 | 4 ] Receive from 5: COORDINATOR 5

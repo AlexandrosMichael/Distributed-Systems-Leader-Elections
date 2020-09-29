@@ -1,0 +1,27 @@
+[2020-05-06 20:16:51 | 1 ] Listening on 172.20.10.3:5001
+[ADMIN INTERFACE] Choose option: Ping Node(1), Election(2), Disconnect(3)
+[2020-05-06 20:17:06 | 1 ] 172.20.10.3:62149 connected.
+[2020-05-06 20:17:06 | 1 ] Receive from 3: PING 1
+[2020-05-06 20:17:06 | 1 ] Send to 3: PING_RESPONSE 1
+[ADMIN INTERFACE] Enter ID of node you would like to ping
+[2020-05-06 20:17:21 | 1 ] Receive from Admin user: PING 4
+[2020-05-06 20:17:21 | 1 ] Receive from 4: Hello from Node 4
+[ADMIN INTERFACE] Choose option: Ping Node(1), Election(2), Disconnect(3)
+[2020-05-06 20:17:34 | 1 ] 172.20.10.3:62158 connected.
+[2020-05-06 20:17:34 | 1 ] Receive from 5: COORDINATOR 5
+[2020-05-06 20:17:34 | 1 ] 172.20.10.3:62157 connected.
+[2020-05-06 20:17:34 | 1 ] Receive from 5: COORDINATOR 5
+[2020-05-06 20:17:55 | 1 ] 172.20.10.3:62175 connected.
+[2020-05-06 20:17:55 | 1 ] Receive from Alpha: BORROW_UPDATE 3
+[2020-05-06 20:17:55 | 1 ] Send to 5: REQUEST
+[2020-05-06 20:17:55 | 1 ] 172.20.10.3:62177 connected.
+[2020-05-06 20:17:55 | 1 ] Receive from 5: REQUEST OK 1
+[RESOURCE] Lending book 3 to Alpha
+[2020-05-06 20:17:55 | 1 ] Update Q - Book 3: On loan.
+[2020-05-06 20:17:55 | 1 ] Send to 5: RELEASE
+[2020-05-06 20:17:57 | 1 ] 172.20.10.3:62179 connected.
+[2020-05-06 20:17:57 | 1 ] Receive from Alpha: BORROW_UPDATE 2
+[2020-05-06 20:17:57 | 1 ] Send to 5: REQUEST
+[2020-05-06 20:17:57 | 1 ] 172.20.10.3:62181 connected.
+[2020-05-06 20:17:57 | 1 ] Receive from 5: REQUEST OK 1
+[2020-05-06 20:17:57 | 1 ] Send to 5: RELEASE

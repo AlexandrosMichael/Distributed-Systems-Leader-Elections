@@ -1,0 +1,44 @@
+[2020-05-06 20:17:02 | 5 ] Listening on 172.20.10.3:5005
+[ADMIN INTERFACE] Choose option: Ping Node(1), Election(2), Disconnect(3)
+[2020-05-06 20:17:13 | 5 ] 172.20.10.3:62151 connected.
+[2020-05-06 20:17:13 | 5 ] Receive from 3: PING 5
+[2020-05-06 20:17:13 | 5 ] Send to 3: PING_RESPONSE 5
+[2020-05-06 20:17:24 | 5 ] 172.20.10.3:62155 connected.
+[2020-05-06 20:17:24 | 5 ] Receive from 3: ELECTION 
+[2020-05-06 20:17:24 | 5 ] Send to 3: OK 
+[2020-05-06 20:17:24 | 5 ] 172.20.10.3:62156 connected.
+[2020-05-06 20:17:24 | 5 ] Receive from 4: ELECTION 
+[2020-05-06 20:17:24 | 5 ] Send to 4: OK 
+[2020-05-06 20:17:34 | 5 ] Send to 1: COORDINATOR 5[2020-05-06 20:17:34 | 5 ] Send to 1: COORDINATOR 5
+
+[2020-05-06 20:17:34 | 5 ] Send to 2: COORDINATOR 5
+[2020-05-06 20:17:34 | 5 ] Send to 2: COORDINATOR 5
+[2020-05-06 20:17:34 | 5 ] Send to 3: COORDINATOR 5
+[2020-05-06 20:17:34 | 5 ] Send to 3: COORDINATOR 5
+[2020-05-06 20:17:34 | 5 ] Send to 4: COORDINATOR 5
+[2020-05-06 20:17:34 | 5 ] Send to 4: COORDINATOR 5
+[2020-05-06 20:17:47 | 5 ] 172.20.10.3:62167 connected.
+[2020-05-06 20:17:47 | 5 ] Receive from 2: REQUEST Q
+[2020-05-06 20:17:47 | 5 ] Send to 2: REQUEST OK
+[2020-05-06 20:17:47 | 5 ] 172.20.10.3:62169 connected.
+[2020-05-06 20:17:47 | 5 ] Receive from 2: RELEASE Q
+[2020-05-06 20:17:51 | 5 ] 172.20.10.3:62171 connected.
+[2020-05-06 20:17:51 | 5 ] Receive from 2: REQUEST Q
+[2020-05-06 20:17:51 | 5 ] Send to 2: REQUEST OK
+[2020-05-06 20:17:51 | 5 ] 172.20.10.3:62173 connected.
+[2020-05-06 20:17:51 | 5 ] Receive from 2: RELEASE Q
+[2020-05-06 20:17:55 | 5 ] 172.20.10.3:62176 connected.
+[2020-05-06 20:17:55 | 5 ] Receive from 1: REQUEST Q
+[2020-05-06 20:17:55 | 5 ] Send to 1: REQUEST OK
+[2020-05-06 20:17:55 | 5 ] 172.20.10.3:62178 connected.
+[2020-05-06 20:17:55 | 5 ] Receive from 1: RELEASE Q
+[2020-05-06 20:17:57 | 5 ] 172.20.10.3:62180 connected.
+[2020-05-06 20:17:57 | 5 ] Receive from 1: REQUEST Q
+[2020-05-06 20:17:57 | 5 ] Send to 1: REQUEST OK
+[2020-05-06 20:17:57 | 5 ] 172.20.10.3:62182 connected.
+[2020-05-06 20:17:57 | 5 ] Receive from 1: RELEASE Q
+[2020-05-06 20:18:05 | 5 ] 172.20.10.3:62184 connected.
+[2020-05-06 20:18:05 | 5 ] Receive from 2: REQUEST Q
+[2020-05-06 20:18:05 | 5 ] Send to 2: REQUEST OK
+[2020-05-06 20:18:05 | 5 ] 172.20.10.3:62186 connected.
+[2020-05-06 20:18:05 | 5 ] Receive from 2: RELEASE Q

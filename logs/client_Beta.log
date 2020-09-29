@@ -1,0 +1,13 @@
+[CLIENT INTERFACE] Choose option: Borrow Book(1), Return Book(2), Disconnect(3)
+[CLIENT INTERFACE] Enter ID of the book you would like to borrow.
+[2020-05-06 20:17:47 | Beta ] Send to 2: BORROW_UPDATE
+[2020-05-06 20:17:47 | Beta ] Receive from 2: Borrow Successful
+[CLIENT INTERFACE] Choose option: Borrow Book(1), Return Book(2), Disconnect(3)
+[CLIENT INTERFACE] Enter ID of the book you would like to borrow.
+[2020-05-06 20:17:51 | Beta ] Send to 2: BORROW_UPDATE
+[2020-05-06 20:17:51 | Beta ] Receive from 2: Borrow Successful
+[CLIENT INTERFACE] Choose option: Borrow Book(1), Return Book(2), Disconnect(3)
+[CLIENT INTERFACE] Enter ID of the book you would like to return.
+[2020-05-06 20:18:05 | Beta ] Send to 2: RETURN UPDATE
+[2020-05-06 20:18:05 | Beta ] Receive from 2: Return Successful
+[CLIENT INTERFACE] Choose option: Borrow Book(1), Return Book(2), Disconnect(3)

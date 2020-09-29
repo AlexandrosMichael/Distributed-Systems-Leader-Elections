@@ -1,0 +1,21 @@
+[2020-05-06 20:16:57 | 3 ] Listening on 172.20.10.3:5003
+[ADMIN INTERFACE] Choose option: Ping Node(1), Election(2), Disconnect(3)
+[ADMIN INTERFACE] Enter ID of node you would like to ping
+[2020-05-06 20:17:06 | 3 ] Receive from Admin user: PING 1
+[2020-05-06 20:17:06 | 3 ] Receive from 1: Hello from Node 1
+[ADMIN INTERFACE] Choose option: Ping Node(1), Election(2), Disconnect(3)
+[ADMIN INTERFACE] Enter ID of node you would like to ping
+[ADMIN INTERFACE] You can't ping yourself. Enter another value.
+[ADMIN INTERFACE] Enter ID of node you would like to ping
+[2020-05-06 20:17:13 | 3 ] Receive from Admin user: PING 5
+[2020-05-06 20:17:13 | 3 ] Receive from 5: Hello from Node 5
+[ADMIN INTERFACE] Choose option: Ping Node(1), Election(2), Disconnect(3)
+[2020-05-06 20:17:24 | 3 ] Send to 4: ELECTION
+[2020-05-06 20:17:24 | 3 ] Send to 5: ELECTION
+[2020-05-06 20:17:24 | 3 ] Receive from 4: OK 4
+[2020-05-06 20:17:24 | 3 ] Receive from 5: OK 5
+[2020-05-06 20:17:34 | 3 ] 172.20.10.3:62161 connected.
+[2020-05-06 20:17:34 | 3 ] Receive from 5: COORDINATOR 5
+[2020-05-06 20:17:34 | 3 ] 172.20.10.3:62162 connected.
+[2020-05-06 20:17:34 | 3 ] Receive from 5: COORDINATOR 5
+[ADMIN INTERFACE] Choose option: Ping Node(1), Election(2), Disconnect(3)

@@ -1,0 +1,365 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{subfig}
+\setlength{\parskip}{1em}
+\usepackage{indentfirst}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ }
+ 
+ \lstset{
+  basicstyle=\ttfamily,
+  breaklines=true,
+  columns=fullflexible
+}
+
+\title{CS4103 P2 - Leader elections and mutual exclusion}
+\author{160004864}
+\date{5 May 2020}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+For this practical we were required to design and implement a distributed system for an integrated library system that makes use of coordination and resource access algorithms. Coordination should be achieved by using the \textbf{Bully Algorithm} for leader election and resource access should be controlled by using a \textbf{centralised algorithm} for mutual exclusion. Furthermore, the distributed system must provide clients with the ability to make updates in a library record, specifically supporting borrow and return book operations in a transparent manner. 
+
+\section{Functionality Implemented}
+The following is a list of the functionality implemented as part of this assignment with a brief description:
+\begin{itemize}
+    \item \textbf{Communication}: A system with 5 multi-threaded nodes was created using the Python programming language, in which communication is achieved using available Socket API only.
+    \item \textbf{Ping Node}: The nodes provide a text-based admin interface which allows an admin to ping another node. 
+    \item \textbf{Logs}: Each node maintains a log recording its activity such as the message it receives and sends. 
+    \item \textbf{Crash simulation}: The admin interface offers the admin the option to simulate a crash which terminates the node process.
+    \item \textbf{Leader election}: A node may be instructed by its administrator to initiate a coordinator election which is done using the Bully Algorithm for leader election. \underline{Extension} - Furthermore, the election process can be triggered if a node detects that a node is down, for example when the ping request times out. In addition the system allows for multiple nodes to start an election and it is automatic, it does not require the need for an admin user input.
+    \item \textbf{Receive/Send Posts}: The system allows clients to make update requests for operations on the library records. Updates can either be borrowing or returning a book. Access to the resource is controlled by a centralised mutual exclusion algorithm.
+\end{itemize}
+With reference to the specification, all the functionality required for Parts 1, 2 and 3 was implemented.
+
+\section{Design}
+In this section I will be giving a description and justification for the implemented functionality.
+
+
+\subsection{Node Setup}
+
+Nodes are the the server nodes that make up our distributed system and they are implemented in the \newline \lstinline{node.py} module. Each of the 5 nodes have a unique ID which is used to identify them and they are assigned a unique hostname-port pair (as found in the nodes.csv file) that is used to set up the server socket on which they will be listening for requests on, whether these are request from other nodes for intra-system communication and coordination or these are requests coming from clients. For every new connection, nodes will spawn a new thread which performs the \lstinline{handle_client} method which processes the message received and depending on its type (see \ref{sec:messageprotocol}) the server will carry out the appropriate functionality. Nodes can act either as servers or clients depending on the kind of message they will be sending. Simply, if they are initiating a request they reach out to the other nodes as clients while their server sockets listens for such requests either from other nodes or clients external to the system.\par 
+
+In addition, nodes provide a textual user interface to their administrator that is handled by a different thread which performs the \lstinline{admin_interface.py} method. This interface allows the admin to carry out the following operations:
+\begin{itemize}
+    \item Ping a node: The admin is prompted for the ID of the node they wish to ping and the ping request is sent to that node.
+    \item Initiate election: The admin can initiate a leader/coordinator election.
+    \item Disconnect node: The admin can disconnect a node from the system and shut it down. This simulates a crash. 
+\end{itemize}
+
+\subsection{Client Setup}
+The implementation of the client functionality can be found ine the \lstinline{client.py} module. Contrary to nodes, clients that will be making book library updates to the distributed system only maintain a client socket as they will not be listening for any requests coming from anywhere. Clients are identified with a unique username, making them recognisable customers in the library records. The \lstinline{client_interface} method provides a text-based interface for the client, allowing them to choose from the following operations:
+\begin{itemize}
+    \item Borrow a book: This prompts the client to enter the book id of the book they wish to borrow. Following that the client connects to a node in the system to which it sends an update request a borrow operation. 
+    \item Return a book: This prompts the client to enter the book id of the book they wish to return. Following that, the client connects to a node in the system to which it sends an update request for a return operation. 
+    \item Disconnect: This shuts down the client program.
+\end{itemize}
+
+\subsection{Message Protocol} \label{sec:messageprotocol}
+In order to facilitate smooth communication, I have designed a message protocol which is followed by the nodes and the clients that are part of our distributed system. Each message is composed of three parts:
+\begin{itemize}
+    \item Sender ID: This is the ID of the sender.
+    \item Message Type: This is the type of the message. More described below.
+    \item Message Body: This is the main body of the message, used if additional information needs to be communicated.
+\end{itemize}
+
+Upon receiving a message nodes and clients can carry out the appropriate functionality depending on what the type of the message was. The message types used as part of the protocol are defined in the \newline \lstinline{node_messages.py} file. The following are the types of messages that can be send between nodes:
+\begin{itemize}
+    \item \lstinline{PING_MESSAGE}: Sent by the node that initiates a ping request is initiated. Received by the node that is on the receiving end of the ping.
+    \item \lstinline{PING_RESPONSE}: Sent as a response to a \lstinline{PING_MESSAGE}.
+    \item \lstinline{ELECTION_MESSAGE}: Sent by the node initiating a leader election. Received by all nodes with a higher ID than the ID of the initiator. 
+    \item \lstinline{OK_MESSAGE}: Sent as a response to an \lstinline{ELECTION_MESSAGE}.
+    \item \lstinline{COORDINATOR_MESSAGE}: Sent by the node that won the leader/coordinator election. Received by all the other nodes.
+    \item \lstinline{REQUEST_MESSAGE}: Sent by the node that is requesting access to the book library resources. Received by the coordinator.
+    \item \lstinline{REQUEST_OK}: Sent by the coordinator to the node which has been granted access to the book library resources.
+    \item \lstinline{RELEASE_MESSAGE}: Sent by the node which has finish accessing the book library resources. Received by the coordinator. 
+    \item \lstinline{DISCONNECT_MESSAGE}: This message is not really ever sent over the network. It is a mock message which is `sent' from the admin to their node, to disconnect the node and shut it down. 
+    
+\end{itemize}
+
+The messages exchanged between nodes and clients are the following:
+\begin{itemize}
+    \item \lstinline{BORROW_UPDATE}: Sent by the client that wishes to perform a borrow operation. Received by the node the client is connected with. 
+    \item \lstinline{BORROW_SUCCESS}: Sent as a response to a \lstinline{BORROW_UPDATE} message, if the borrow operation is successful.
+    \item \lstinline{BORROW_FAIL}: Sent as a response to a \lstinline{BORROW_UPDATE} message, if the borrow operation is unsuccessful.
+    \item \lstinline{RETURN UPDATE}: Sent by the client that wishes to perform a return operation. Received by the node the client is connected with.     
+    \item \lstinline{RETURN_SUCCESS}: Sent as a response to a \lstinline{RETURN_UPDATE} message, if the return operation was successful.
+    \item \lstinline{RETURN_FAIL}: Send as a response to a \lstinline{RETURN_UPDATE} message, if the return operation was unsuccessful.
+\end{itemize}
+
+\subsection{Ping}
+A ping request is initiated by a node's administrator. The node will act as a client and it will connect to the node that the administrator chose to ping, and send a \lstinline{PING_MESSAGE} to it, a functionality that is carried out in the \lstinline{ping} method. The pinged node will receive this message through its server socket and it will respond with a \lstinline{PING_RESPONSE} message. If this is received, the client node will print the response and carry on. If the response times out however, it will interpret the node as being down and thus it will initiate coordinator elections.
+
+\subsection{Elections}
+Elections are carried out using the Bully Algorithm, as described here\cite{elections} and implemented in the \newline \lstinline{initiate_election} method. Elections can be initiated in several ways. The admin of a node may instruct it to initialise the election or it may be the result of a ping request timing out. Elections are initiated by a node, now acting as a client, by sending an \lstinline{ELECTION_MESSAGE} to the nodes that have a higher ID than itself. The node will then wait for an \lstinline{OK_MESSAGE} from any of these nodes. If this times out then it will be the winner of the election and it will send a \lstinline{COORDINATOR_MESSAGE} to all of the nodes, announcing that it is the new coordinator. If it receives an \lstinline{OK_MESSAGE}, it will wait for a \lstinline{COORDINATOR_MESSAGE}. If it receives this, it sets the new coordinator as the message's sender and carries on. If this times out however, it will initiate another election.\par
+
+An important part of this process is that nodes that have higher id's conduct their own elections in the same way. For this reason when a node receives an \lstinline{ELECTION_MESSAGE} through its server socket, it will call \lstinline{initiate_election} as well and it will carry out the same process as it was described above. \par 
+
+To better understand this process, I envisioned the stages a node can find itself during an election as a set of states and the messages as transitions between said states, as depicted in the following visualisation: 
+
+\begin{figure}[H]
+  \centering
+  \subfloat{\includegraphics[width=0.6\textwidth]{Leader Elections.png}}
+  
+\caption{Election states and messages, visualised.}
+
+\end{figure}
+ 
+\subsection{Library Record}
+The library record consists of a list of instances of the \lstinline{Book} class, defined in the \lstinline{book.py} module. Its class diagram is as follows:
+
+\begin{figure}[H]
+  \centering
+  \subfloat{\includegraphics[width=0.2\textwidth]{Book Class.png}}
+\caption{Book class diagram.}
+\end{figure}
+
+Where:
+\begin{itemize}
+    \item \lstinline{bookID}: is the unique id for the book. With the current settings, this will be between 1 and 10 (inclusive). 
+    \item \lstinline{onLoan}: holds whether the book is on loan or on shelf.
+    \item \lstinline{customerID}: keeps the username of the customer that has borrowed the book. If on shelf, this is an empty string.
+\end{itemize}
+
+The list is created by the \lstinline{create_books.py} module and it is saved as a file within the \lstinline{resources} directory. This module should only be called to initialise the list or to wipe out any existing records. \par 
+
+The \lstinline{access_books.py} module provides a number methods for accessing modifying and saving the updated book list. They also perform the necessary validation checks, for example checking that a book to be borrowed is on shelf, and whether the book to be returned is on loan, and if it is, it was taken out by the customer making the request. These method are used by the node, once they are granted access to the resource. 
+
+\subsection{Borrow \& Return Updates}
+The client can make a borrow or a return update by sending either a \lstinline{BORROW_UPDATE} or a \lstinline{RETURN_REQUEST} message to a node in the distributed system. The node records this request, as a tuple of \newline \lstinline{(<operation_type>, <request_msg>), <connection>}) where \lstinline{operation_type} can either be `borrow' or `return', \lstinline{request_msg} is the message as received from the client and \lstinline{connection} is the connection between the node and the client, which is kept open until the request is fulfilled. This tuple is then added to a FIFO queue that each node maintains named \lstinline{CLIENT_OPERATION_QUEUE}, which holds the requests sent by clients. This was implemented in this way as it allows as node to carry on with other operations, and return to fulfilling these requests when the node has been notified by the coordinator that is been granted access to the library record. \par 
+
+Once access has been granted to this node (see \ref{sec:resourceaccess}), the node will perform the operation at the front of the \lstinline{CLIENT_OPERATION_QUEUE}, which depending on the type of operation it is, it will either call the \lstinline{perform_borrow} method or the \lstinline{perform_return} method. These  make use of the access methods provided by \lstinline{access_books.py} to attempt the updates for borrowing or returning a book. If these succeed, the node will respond to the client with either a \lstinline{BORROW_SUCCESS} or \lstinline{RETURN_SUCCESS} message to notify the client that their request has been completed. If these fail the node will respond to the client with either a \lstinline{BORROW_FAIL} or \lstinline{RETURN_FAIL} message. 
+
+\subsection{Resource Access} \label{sec:resourceaccess}
+Before a node can access the book list resource to make the updates as requested by a client, they must be granted access by the coordinator node which uses a centralised algorithm for mutual exclusion. Upon receiving an update request from a client, the node connects to the server socket of the coordinator node and it sends a \lstinline{REQUEST_MESSAGE}. When the coordinator node receives this message, it will check whether the lock on the resource is currently being held by another node. If it is not, it will call the \lstinline{grant_access} method, in which it will then act as a client and send the requesting node a \lstinline{REQUEST_OK} message. When this message is received by the requesting node it will call the \lstinline{perform_client_operation} method, which will carry out the operation that is at the front of its \lstinline{CLIENT_OPERATION_QUEUE}. In the case where a lock is currently held by another node, the request will be recorded stored in a FIFO queue kept by the coordinator named \lstinline{REQUEST_QUEUE}. When the node holding the lock completes its operation on the resource, it will send a \lstinline{RELEASE_MESSAGE} to the coordinator. This will signal the coordinator that this node has finished working with the resource and at this point it will pop the first element of \lstinline{REQUEST_QUEUE}, to which it will send a \lstinline{REQUEST_OK}   and it will grant is access to the resource using \lstinline{grant_access} method. \par 
+
+
+
+\subsection{Logging}
+Logging is achieved using the classes defined in the \lstinline{logger.py} module. The logging functionality for the nodes is handled by the \lstinline{NodeLogger} class, which keeps a file for each node within the \lstinline{logs} directory. The logs contain details of the most important activity for each node, such as the messages it sends and receives. I have decided to keep logs for the clients as well in a similar fashion, which are handled by instances of the \lstinline{ClientLogger} class. 
+
+
+\section{Examples and Testing}
+
+\subsection{Ping}
+In this example we will include examples of the ping functionality working. In the following example the admin of node with \lstinline{ID=1} instructs the node to ping the node with \lstinline{ID=2}: 
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Node \lstinline{ID=1}] {\includegraphics[width=0.8\textwidth]{ping_1.png}}
+  \hfill
+  \subfloat[Node \lstinline{ID=2}]{\includegraphics[width=0.8\textwidth]{ping_2.png}}
+  \hfill
+
+\caption{Ping functionality example.}
+\end{figure}
+
+As we can see, the admin of node with \lstinline{ID=1} chooses to ping node with \lstinline{ID=2}. It then sends a \lstinline{PING_MESSAGE} to node \lstinline{ID=2} which responds with a \lstinline{PING_RESPONSE} message, as required.
+
+
+\subsection{Crash Simulation}
+In this example we will be demonstrating the crash simulation feature, which is  activated when admins instruct their node to shut down:
+
+\begin{figure}[H]
+  \centering
+  \subfloat{\includegraphics[width=0.8\textwidth]{crash_1.png}}
+  \hfill
+ 
+
+
+\caption{Crash simulation functionality example.}
+\end{figure}
+
+ As we can see the admin chooses the third option, `Disconnect' which causes the node process to be killed, simulating a crash.
+ 
+\clearpage
+
+\subsection{Leader Election}
+We have seen several ways in which an election may be initiated. In the first example we will look at an example where the admin of the node with \lstinline{ID=3} initiates an election:
+
+\begin{figure}[H]
+  \centering
+  \subfloat{\includegraphics[width=0.8\textwidth]{election_1_1.png}}
+  \hfill
+
+\caption{Admin initiating election example.}
+\end{figure}
+
+As we can see the admin has entered option 2 (Election) in the admin interface which caused an election to be initiated. The node sent an \lstinline{ELECTION_MESSAGE} to nodes with \lstinline{ID=4} and \lstinline{ID=5} which responded with an \lstinline{OK_MESSAGE}. Following that we see that the subsequent elections that were initiated by the nodes with higher IDs results resulted in the node with the highest id \lstinline{ID=5} to win, as it sent a \lstinline{COORDINATOR} message. \par 
+
+There is a reason why node with \lstinline{ID=3} received the \lstinline{COORDINATOR} message twice. This is because node with  \lstinline{ID=5} participated in 2 elections - one initiated by node with \lstinline{ID=3} and one initiated by node with \lstinline{ID=4} upon receiving the very first \lstinline{ELECTION_MESSAGE} from node with \lstinline{ID=3}. The following is the log produced for node with \lstinline{ID=5} for the same example:
+
+\begin{figure}[H]
+  \centering
+  \subfloat{\includegraphics[width=0.8\textwidth]{election_1_2.png}}
+  \hfill
+
+\caption{Node receiving multiple election requests.}
+\end{figure}
+
+We have seen that another way an election can be initiated is when a ping request times out or when it is down. The following is an example produced when a timeout was forced for a ping request:
+\begin{figure}[H]
+  \centering
+  \subfloat{\includegraphics[width=0.8\textwidth]{election_2_1.png}}
+  \hfill
+
+\caption{Election initiated after ping request timing out.}
+\end{figure}
+
+The ping request to node with  \lstinline{ID=5} timed out and so elections were initiated. However, none of the election messages were forced to time out so elections carried on as normal. \par 
+
+The following is an example of an election where the current coordinator, node \lstinline{ID=5}, shuts down and an election is then initiated: 
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Node \lstinline{ID=5}]{\includegraphics[width=0.8\textwidth]{election_3_2.png}}
+  \hfill
+  \subfloat[Node \lstinline{ID=3}]{\includegraphics[width=0.8\textwidth]{election_3_1.png}}
+  \hfill 
+\caption{Election initiated after ping request detected a node was offline.}
+\end{figure}
+
+Node \lstinline{ID=3} detected that node \lstinline{ID=5} was offline, and it thus intited elections. The node with the highest ID was now node \lstinline{ID=4} which became the new coordinator. \par 
+
+In the following example I will be testing the system when  a time out is forced on the \lstinline{OK_MESSAGE}.
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Node \lstinline{ID=3}]{\includegraphics[width=0.8\textwidth]{election_4_1.png}}
+  \hfill
+\caption{Forcing \lstinline{OK_MESSAGE} to time out.}
+\end{figure}
+
+As we can see from the above, the \lstinline{OK_MESSAGE} times out and so node with \lstinline{ID=3} declares itself the winner of the election. However, when the other nodes eventually wake up, they `bully' the other nodes into submission, with node \lstinline{ID=5} eventually being the final coordinator. \par 
+
+The last example for our election functionality will be the example produced when the \lstinline{COORDINATOR_MESSAGE} times out: 
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Node \lstinline{ID=3}]{\includegraphics[width=0.8\textwidth]{election_5_1.png}}
+  \hfill
+\caption{Forcing \lstinline{COORDINATOR_MESSAGE} to time out.}
+\end{figure}
+In the above, we can see that while an \lstinline{OK_MESSAGE} is received from node \lstinline{ID=5}, a \lstinline{COORDINATOR_MESSAGE} is never received and for that reason it times out and an election is re-initiated, as required. If the \lstinline{OK_MESSAGE} keeps being received while the \lstinline{COORDINATOR_MESSAGE} always times out, the elections will be re-initiated indefinitely. 
+
+\subsection{Receive/Send Posts}
+Within this section we will be going over examples of all the functionality related to accessing the library records. We will be starting with a `clean' library record, that is all the books are on shelf. \par 
+
+In the following example, a client connects to node with \lstinline{ID=1} and it sends it a \lstinline{BORROW_UPDATE} message for borrowing book with \lstinline{ID=1}. 
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Client \lstinline{ID=Alpha}]{\includegraphics[width=0.8\textwidth]{requests_1_1.png}}
+  \hfill
+   \subfloat[Node \lstinline{ID=1}]{\includegraphics[width=0.8\textwidth]{requests_1_3.png}}
+  \hfill 
+  \subfloat[Node \lstinline{ID=5}]{\includegraphics[width=0.8\textwidth]{requests_1_2.png}}
+  \hfill 
+ 
+  
+\caption{Resource access example.}
+\end{figure}
+
+As we can see the client is prompted to enter an option and they choose to borrow the book with \lstinline{ID=1}. As a result it sends a \lstinline{BORROW_UPDATE} message to node with \lstinline{ID=1}, which eventually responds with a \lstinline{BORROW_SUCCESS} message. Between these two events however, we can see that node with \lstinline{ID=1} sends a \lstinline{REQUEST_MESSAGE} to the coordinator, node \lstinline{ID=5}. The coordinator then sends a \lstinline{REQUEST_OK} message back to node \lstinline{ID=1} which prompts it to access the resource and perform the required updates. Furhtermore, upon finishing the operation, node \lstinline{ID=1} sends a \lstinline{RELEASE_MESSAGE} to the coordinator indicating that it is done working accessing the resource. \par 
+
+In this next example, we will be adding some delay between when the node completes the resource access to the time it sends a \lstinline{RELEASE_MESSAGE} to the coordinator, to show how the queue works. We will have two clients connected to the system, client \lstinline{Alpha} connected to node with \lstinline{ID=1} and client \lstinline{Beta} connected to node \lstinline{ID=2} and they will both make requests for the resource.
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Node \lstinline{ID=1}]{\includegraphics[width=0.8\textwidth]{request_2_2.png}}
+  \hfill
+   \subfloat[Node \lstinline{ID=2}]{\includegraphics[width=0.8\textwidth]{request_2_3.png}}
+  \hfill 
+  \subfloat[Node \lstinline{ID=5}]{\includegraphics[width=0.8\textwidth]{request_2_1.png}}
+  \hfill 
+
+\caption{Coordinator request queue in action.}
+\end{figure}
+
+As we can see from the screenshots above, the coordinator places the request from node \lstinline{ID=2} into the \lstinline{REQUEST_QUEUE} and it only sends it the \lstinline{REQUEST_OK} message once it has received the \lstinline{RELEASE_MESSAGE} from the node with \lstinline{ID=1}, which had earlier acquired the lock on the resources. \par 
+
+In the following example we will show an example of the return operation carried out. The very first operation carried out was client Alpha borrowing book with \lstinline{ID=1} and now we will attempt to return it back on shelf.
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Client \lstinline{ID=Alpha}]{\includegraphics[width=0.8\textwidth]{requests_3_1.png}}
+  \hfill
+   \subfloat[Node \lstinline{ID=1}]{\includegraphics[width=0.8\textwidth]{requests_3_2.png}}
+  \hfill 
+
+\caption{Returning a book borrowed earlier.}
+\end{figure}
+
+As we can see the node carries out the the appropriate procedures and the book is successfully returned on shelf. \par 
+
+In the last two examples we will validate the library access methods. The tests will be as follows:
+\begin{itemize}
+    \item Return a book that is on shelf.
+    \item Return a book held by another customer.
+    \item Borrow a book that is held by another customer
+\end{itemize}
+
+As it stands book with {ID=2} is held by customer Alpha, and book with {ID=4} is held by customer Beta.
+
+
+
+
+The following is when customer Alpha attempts to carry out all of the above, in series:
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Client \lstinline{ID=Alpha}]{\includegraphics[width=0.8\textwidth]{requests_4_1.png}}
+  \hfill
+
+\caption{Validating library operations.}
+\end{figure}
+
+As we can see, none of these operations were successful and we can thus conclude that the system is operating correctly. \par 
+
+ To verify the state of the library record, I have used the \lstinline{print_list_details} of the \lstinline{access_books.py} module whose output was:
+ 
+ \begin{figure}[H]
+  \centering
+  \subfloat{\includegraphics[width=0.6\textwidth]{requests_4_2.png}}
+  \hfill
+
+\caption{Library record state.}
+\end{figure}
+ 
+
+\section{Evaluation}
+Overall I am very pleased with the result of my work as I have successfully implemented a distributed system that supports all of the functionality within the specification, with the addition of an leader election extension requirement. I am also very happy with the design of my system as it employs multi-threading which in theory means that it can handle a large number of clients connecting to it. Furthermore, the message protocol I have introduced allows for a very smooth intra-system communication between nodes as well as node-client communication. This in combination with the modularised code make the system highly maintainable and scalable as introducing additional features is as easy as adding new message types, and adding new methods that carry out the additional functionality. What I'm most proud of however, is the asynchronous nature of the resource access mechanism that I've implemented. In addition to the queue maintained by the coordinator, having a queue with outstanding client requests/operations in each node, the nodes can carry on with other work until they are granted access to the resource, maximising efficiency - they do not just busy wait until they are given the lock on the resource. \par 
+
+If I had more time, I would attempt to extend the functionality of the system by supporting joining nodes, meaning allowing the system to grow on demand, for example, when there is a high volume of communication. Lastly, I would've attempted to make the library records more sophisticated, perhaps by adding a database, and introducing other fields such as due date as well as functionality to allow clients to renew/extend their book loan.
+
+\section{Running}
+I have included a \lstinline{README} file within the submission which provides comprehensive instructions on how to set up and run the distributed system implemented. If you wish to test the system please take good care to follow the instructions closely, and please make sure that the correct hostname values are passed within the \lstinline{nodes.csv} file. \par 
+
+In the submission I have also included an examples of logs within the \lstinline{logs} directory. However, note that I have wiped the records of the \lstinline{book_list} resource prior to submission and so currently all of the books will be `on shelf'. 
+
+
+\clearpage
+\begin{thebibliography}{}
+
+
+\bibitem{elections}
+Toniolo, A. (2020). CS4013 (L12 W6): Coordintion - Part 2  Slide 89.
+https://studres.cs.st-andrews.ac.uk/CS4103/Lectures/L12\_w6.pdf
+
+\end{thebibliography}
+
+
+
+\end{document}
